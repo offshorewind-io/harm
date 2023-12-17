@@ -42,12 +42,16 @@ def calculate_harm(monotonic_loading_parameters, ratcheting_parameters, modellin
     beta_0 = ratcheting_parameters['beta_0']
 
     sigma_0 = 0
-    epsilon = [0]
+    epsilon_0 = 0
+    sigma_output = [0]
+    epsilon_output = [0]
     alpha_i = np.zeros(len(k_i))
     alpha_r = 0
     beta = beta_0 * 1
 
-    for sigma in sigma_load[1:]:
+    d_output = np.round(len(sigma_load) / 3000).astype(int)
+
+    for i, sigma in enumerate(sigma_load[1:]):
 
         d_sigma = sigma - sigma_0
         d_alpha_i = d_t / mu * macaulay(np.abs(sigma - H_i * alpha_i) - k_i) * np.sign(sigma - H_i * alpha_i) 
@@ -59,14 +63,19 @@ def calculate_harm(monotonic_loading_parameters, ratcheting_parameters, modellin
         alpha_i = alpha_i + d_alpha_i
         alpha_r = alpha_r + d_alpha_r
         beta = beta + np.abs(d_alpha_r)
-        epsilon = epsilon + [epsilon[-1] + d_epsilon]
+        epsilon = epsilon_0 + d_epsilon
         sigma_0 = sigma * 1
+        epsilon_0 = epsilon * 1
 
-    return sigma_load, epsilon
+        if i % d_output == 0:
+            epsilon_output = epsilon_output + [epsilon]
+            sigma_output = sigma_output + [sigma]
+
+    return sigma_output, epsilon_output
 
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-server = app.server
+#server = app.server
 
 def input_div(name, id, default_value):
 
@@ -154,4 +163,4 @@ def update_figure(button, E_0, k_u, epsilon_pu, m_h, R_0, beta_0, m_r, m_s, N_s,
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True)  
+    app.run_server(debug=True, port=8080)  
