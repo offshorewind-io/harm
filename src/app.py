@@ -75,7 +75,7 @@ def calculate_harm(monotonic_loading_parameters, ratcheting_parameters, modellin
 
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-#server = app.server
+server = app.server
 
 def input_div(name, id, default_value):
 
@@ -163,4 +163,4 @@ def update_figure(button, E_0, k_u, epsilon_pu, m_h, R_0, beta_0, m_r, m_s, N_s,
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True, port=8080)  
+    app.run_server(debug=True)  
