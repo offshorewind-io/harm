@@ -28,13 +28,7 @@ def calculate_harm(monotonic_loading_parameters, ratcheting_parameters, modellin
     sigma_min = modelling_parameters['sigma_min']
     d_t = modelling_parameters['d_t']
     mu = modelling_parameters['mu']
-
-    n_step = np.round(modelling_parameters['T'] / 2 / d_t).astype(int)
-    sigma_load_initial = np.linspace(0, sigma_max, n_step)
-    sigma_load_down = np.linspace(sigma_max, sigma_min, n_step)[1:-1]
-    sigma_load_up = np.linspace(sigma_min, sigma_max, n_step)
-    sigma_load_cycle = list(sigma_load_down) + list(sigma_load_up)
-    sigma_load = np.array(list(sigma_load_initial) + sigma_load_cycle * modelling_parameters['n_cycles'])
+    n_cycles = modelling_parameters['n_cycles']
 
     R_0 = ratcheting_parameters['R_0']
     m_r = ratcheting_parameters['m_r']
@@ -49,11 +43,25 @@ def calculate_harm(monotonic_loading_parameters, ratcheting_parameters, modellin
     alpha_r = 0
     beta = beta_0 * 1
 
-    d_output = np.round(len(sigma_load) / 3000).astype(int)
+    n_step = np.round(modelling_parameters['T'] / 2 / d_t).astype(int)
+    d_output = np.round(n_step * 2 * n_cycles / 1000).astype(int)
+    d_sigma_abs = (sigma_max - sigma_min) / n_step
 
-    for i, sigma in enumerate(sigma_load[1:]):
+    i_cycle = 0
+    load_dir = 1
+    i = 0
 
-        d_sigma = sigma - sigma_0
+    while i_cycle < n_cycles:        
+        i += 1
+        if sigma_0 >= sigma_max :
+            load_dir = -1
+            i_cycle += 1
+        elif (sigma_0 <= sigma_min and i_cycle > 0):
+            load_dir = 1
+            
+        d_sigma = load_dir * d_sigma_abs
+        sigma = sigma_0 + load_dir * d_sigma_abs
+
         d_alpha_i = d_t / mu * macaulay(np.abs(sigma - H_i * alpha_i) - k_i) * np.sign(sigma - H_i * alpha_i) 
 
         R_i = R_0 * (k_i / k_u) * (beta / beta_0)**(-m_r) * (np.abs(sigma) / k_u)**m_s
